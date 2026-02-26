@@ -1,6 +1,6 @@
 # OLAP BI Assistant — Capstone Project (Tier 2: Builder)
 
-## 📦 What's in this package
+## What's in this package
 
 | File | Description |
 |------|-------------|
@@ -15,7 +15,7 @@
 
 ---
 
-## 🚀 Quick Start (HTML Dashboard — no install)
+## Quick Start (HTML Dashboard — no install)
 
 1. Open `interactive_dashboard.html` in any browser
 2. Explore all 4 sections: Dashboard, OLAP Explorer, AI Chat, Data View
@@ -23,7 +23,7 @@
 
 ---
 
-## 🖥️ Streamlit App (full-featured)
+## Streamlit App (full-featured)
 
 ```bash
 pip install -r requirements.txt
@@ -47,7 +47,7 @@ Open http://localhost:8501 in your browser.
 
 ---
 
-## 📁 Dataset
+## Dataset
 
 - 10,000 transactions | 2022–2024 | 4 Regions | 4 Categories
 - Total Revenue: $64,630,746 | Avg Margin: 36.4%
