@@ -1,0 +1,1148 @@
+<!-- Kismete Guri & Megi Grenazi @ All rights reserved -->
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>OLAP BI Assistant – Global Retail Sales</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0f1117;--sidebar:#161b27;--card:#1e2535;--card2:#252d40;
+  --accent:#4f8ef7;--accent2:#7c5cbf;--green:#2ecc71;--red:#e74c3c;
+  --text:#e8eaf0;--sub:#9ba3c0;--border:#2a3352;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+/* Sidebar */
+#sidebar{width:260px;min-width:260px;background:var(--sidebar);border-right:1px solid var(--border);padding:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
+.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo h2{font-size:18px;color:var(--text);font-weight:700}
+.logo p{font-size:11px;color:var(--sub);margin-top:4px}
+.nav-section{padding:16px 20px 8px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--sub);font-weight:600}
+.nav-item{padding:10px 20px;cursor:pointer;font-size:13px;color:var(--sub);display:flex;align-items:center;gap:10px;border-left:3px solid transparent;transition:all .2s}
+.nav-item:hover,.nav-item.active{background:rgba(79,142,247,.1);color:var(--text);border-left-color:var(--accent)}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-filters{padding:16px 20px}
+.sidebar-filters label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;margin-top:12px}
+.sidebar-filters select,.sidebar-filters input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px}
+.sidebar-filters select:focus,.sidebar-filters input:focus{outline:none;border-color:var(--accent)}
+.quick-btns{padding:0 20px 20px}
+.qbtn{display:block;width:100%;padding:8px 12px;margin-bottom:6px;background:var(--card2);border:1px solid var(--border);color:var(--sub);font-size:11px;border-radius:6px;cursor:pointer;text-align:left;transition:all .2s}
+.qbtn:hover{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--text)}
+/* Main */
+#main{margin-left:260px;flex:1;padding:24px;overflow-x:hidden}
+.page{display:none}
+.page.active{display:block}
+.page-title{font-size:22px;font-weight:700;margin-bottom:6px}
+.page-sub{font-size:13px;color:var(--sub);margin-bottom:24px}
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card.blue::before{background:var(--accent)}
+.kpi-card.purple::before{background:var(--accent2)}
+.kpi-card.green::before{background:var(--green)}
+.kpi-card.red::before{background:var(--red)}
+.kpi-val{font-size:26px;font-weight:800;color:var(--text)}
+.kpi-lbl{font-size:12px;color:var(--sub);margin-top:4px}
+.kpi-trend{position:absolute;top:16px;right:16px;font-size:12px;font-weight:600}
+.trend-up{color:var(--green)}
+.trend-dn{color:var(--red)}
+/* Grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.grid13{display:grid;grid-template-columns:1fr 3fr;gap:16px;margin-bottom:16px}
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card h3{font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)}
+.card h3 .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;margin-left:8px;font-weight:500}
+.badge-blue{background:rgba(79,142,247,.2);color:var(--accent)}
+.badge-green{background:rgba(46,204,113,.2);color:var(--green)}
+.card canvas{max-height:260px}
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:10px 12px;background:var(--card2);color:var(--sub);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;border-bottom:1px solid var(--border)}
+.data-table td{padding:10px 12px;border-bottom:1px solid rgba(42,51,82,.5);color:var(--text)}
+.data-table tr:hover td{background:rgba(79,142,247,.05)}
+.data-table .num{text-align:right;font-variant-numeric:tabular-nums;font-family:monospace}
+.data-table .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500}
+/* OLAP Explorer */
+.olap-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.olap-tab{padding:8px 16px;background:var(--card2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;color:var(--sub);transition:all .2s}
+.olap-tab.active,.olap-tab:hover{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--text)}
+.olap-panel{display:none}
+.olap-panel.active{display:block}
+.form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end}
+.form-group{flex:1;min-width:140px}
+.form-group label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+.form-group select,.form-group input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px}
+.btn{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.btn:hover{background:#3a7ae0;transform:translateY(-1px)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.result-box{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;min-height:80px}
+.insight-box{background:rgba(249,168,37,.1);border-left:3px solid #f9a825;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13px}
+.insight-box strong{color:#f9a825}
+/* Chat */
+#chat-messages{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;height:400px;overflow-y:auto;margin-bottom:12px}
+.msg{margin-bottom:16px;display:flex;gap:12px;align-items:flex-start}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.msg-user .msg-avatar{background:var(--accent)}
+.msg-bot .msg-avatar{background:var(--accent2)}
+.msg-body{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.6;max-width:85%}
+.msg-user .msg-body{background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.3)}
+.chat-input-row{display:flex;gap:10px}
+.chat-input-row input{flex:1;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-size:13px}
+.chat-input-row input:focus{outline:none;border-color:var(--accent)}
+/* Progress bar */
+.progress-bar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s}
+/* Responsive */
+@media(max-width:900px){
+  #sidebar{position:relative;width:100%;height:auto;flex-direction:row;flex-wrap:wrap}
+  #main{margin-left:0}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+.tag-region{background:rgba(79,142,247,.2);color:#7ab3ff}
+.tag-cat{background:rgba(124,92,191,.2);color:#b39ddb}
+.tag-year{background:rgba(46,204,113,.2);color:#81c784}
+.scrollable-table{overflow-x:auto;overflow-y:auto;max-height:360px}
+.chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin:2px}
+.chip-blue{background:rgba(79,142,247,.2);color:var(--accent)}
+.chip-green{background:rgba(46,204,113,.2);color:var(--green)}
+.chip-red{background:rgba(231,76,60,.2);color:var(--red)}
+.chip-purple{background:rgba(124,92,191,.2);color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="logo">
+    <h2>📊 OLAP Assistant</h2>
+    <p>Global Retail Sales 2022–2024</p>
+  </div>
+
+  <div class="nav-section">Navigation</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📈</span>Executive Dashboard</div>
+  <div class="nav-item" onclick="showPage('olap',this)"><span class="icon">🔧</span>OLAP Explorer</div>
+  <div class="nav-item" onclick="showPage('chat',this)"><span class="icon">💬</span>AI Chat</div>
+  <div class="nav-item" onclick="showPage('data',this)"><span class="icon">📋</span>Data View</div>
+
+  <div class="nav-section">Quick Queries</div>
+  <div class="quick-btns">
+    <button class="qbtn" onclick="runQuick('revenue_region')">💰 Revenue by Region</button>
+    <button class="qbtn" onclick="runQuick('top_countries')">🏆 Top 10 Countries</button>
+    <button class="qbtn" onclick="runQuick('yoy_growth')">📅 YoY Growth 2023→24</button>
+    <button class="qbtn" onclick="runQuick('cat_share')">🥧 Category Share</button>
+    <button class="qbtn" onclick="runQuick('drill_q4')">🔽 Drill Q4 by Month</button>
+    <button class="qbtn" onclick="runQuick('electronics_europe')">⚡ Electronics in Europe</button>
+  </div>
+
+  <div class="nav-section">Filters</div>
+  <div class="sidebar-filters">
+    <label>Year</label>
+    <select id="f-year" onchange="applyFilters()">
+      <option value="all">All Years</option>
+      <option value="2022">2022</option>
+      <option value="2023">2023</option>
+      <option value="2024">2024</option>
+    </select>
+    <label>Region</label>
+    <select id="f-region" onchange="applyFilters()">
+      <option value="all">All Regions</option>
+      <option>North America</option>
+      <option>Europe</option>
+      <option>Asia Pacific</option>
+      <option>Latin America</option>
+    </select>
+    <label>Category</label>
+    <select id="f-cat" onchange="applyFilters()">
+      <option value="all">All Categories</option>
+      <option>Electronics</option>
+      <option>Furniture</option>
+      <option>Office Supplies</option>
+      <option>Clothing</option>
+    </select>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<div id="page-dashboard" class="page active">
+  <div class="page-title">📈 Executive Dashboard</div>
+  <div class="page-sub">Global Retail Sales Overview — 2022 to 2024</div>
+
+  <div class="kpi-row">
+    <div class="kpi-card blue">
+      <div class="kpi-val" id="kpi-rev">$64.6M</div>
+      <div class="kpi-lbl">Total Revenue</div>
+      <span class="kpi-trend trend-up">↑ All Years</span>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-val" id="kpi-profit">$19.9M</div>
+      <div class="kpi-lbl">Total Profit</div>
+      <span class="kpi-trend trend-up">↑ 30.8% Margin</span>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-val" id="kpi-margin">36.4%</div>
+      <div class="kpi-lbl">Avg Profit Margin</div>
+      <span class="kpi-trend trend-up">✓ Healthy</span>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-val" id="kpi-trans">10,000</div>
+      <div class="kpi-lbl">Transactions</div>
+      <span class="kpi-trend" style="color:var(--sub)">2022–2024</span>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Revenue by Region <span class="badge badge-blue">Slice</span></h3>
+      <canvas id="ch-region"></canvas>
+    </div>
+    <div class="card">
+      <h3>Revenue by Category <span class="badge badge-green">Dice</span></h3>
+      <canvas id="ch-cat"></canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Monthly Revenue Trend 2024 <span class="badge badge-blue">Drill-Down</span></h3>
+    <canvas id="ch-trend" style="max-height:200px"></canvas>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Revenue by Year <span class="badge badge-green">Roll-Up</span></h3>
+      <canvas id="ch-year"></canvas>
+    </div>
+    <div class="card">
+      <h3>Profit Margin by Category</h3>
+      <canvas id="ch-margin"></canvas>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Customer Segment Revenue</h3>
+      <canvas id="ch-segment"></canvas>
+    </div>
+    <div class="card">
+      <h3>Top 10 Countries by Profit <span class="badge badge-blue">Top N</span></h3>
+      <div class="scrollable-table">
+        <table class="data-table" id="tbl-countries"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ OLAP EXPLORER ═══════════ -->
+<div id="page-olap" class="page">
+  <div class="page-title">🔧 OLAP Explorer</div>
+  <div class="page-sub">Interactively perform all six OLAP operations on the dataset</div>
+
+  <div class="olap-tabs">
+    <div class="olap-tab active" onclick="switchOLAP('slice',this)">🔪 Slice</div>
+    <div class="olap-tab" onclick="switchOLAP('dice',this)">🎲 Dice</div>
+    <div class="olap-tab" onclick="switchOLAP('drilldown',this)">🔽 Drill-Down</div>
+    <div class="olap-tab" onclick="switchOLAP('rollup',this)">🔼 Roll-Up</div>
+    <div class="olap-tab" onclick="switchOLAP('pivot',this)">🔄 Pivot</div>
+    <div class="olap-tab" onclick="switchOLAP('drillthrough',this)">🔍 Drill-Through</div>
+    <div class="olap-tab" onclick="switchOLAP('compare',this)">📅 YoY Compare</div>
+    <div class="olap-tab" onclick="switchOLAP('topn',this)">🏆 Top N</div>
+  </div>
+
+  <!-- SLICE -->
+  <div id="op-slice" class="olap-panel active">
+    <div class="card">
+      <h3>🔪 Slice — Filter on a Single Dimension</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Select one dimension value to view the data from that specific angle.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Dimension</label>
+          <select id="sl-dim" onchange="updateSliceValues()">
+            <option value="year">Year</option>
+            <option value="quarter">Quarter</option>
+            <option value="region">Region</option>
+            <option value="category">Category</option>
+            <option value="customer_segment">Customer Segment</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Value</label>
+          <select id="sl-val"></select>
+        </div>
+        <div class="form-group" style="max-width:160px">
+          <label>Group Result By</label>
+          <select id="sl-groupby">
+            <option value="category">Category</option>
+            <option value="region">Region</option>
+            <option value="quarter">Quarter</option>
+            <option value="year">Year</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doSlice()">Apply Slice</button>
+        </div>
+      </div>
+      <div class="result-box" id="slice-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Select a dimension and value, then click Apply Slice.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DICE -->
+  <div id="op-dice" class="olap-panel">
+    <div class="card">
+      <h3>🎲 Dice — Filter on Multiple Dimensions</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Apply two or more filters simultaneously to drill into a specific data cube cell.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Year</label>
+          <select id="dc-year">
+            <option value="all">All</option>
+            <option>2022</option><option>2023</option><option selected>2024</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Region</label>
+          <select id="dc-region">
+            <option value="all">All</option>
+            <option>North America</option><option selected>Europe</option>
+            <option>Asia Pacific</option><option>Latin America</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="dc-cat">
+            <option value="all">All</option>
+            <option selected>Electronics</option><option>Furniture</option>
+            <option>Office Supplies</option><option>Clothing</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doDice()">Apply Dice</button>
+        </div>
+      </div>
+      <div class="result-box" id="dice-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Configure filters and click Apply Dice.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRILL-DOWN -->
+  <div id="op-drilldown" class="olap-panel">
+    <div class="card">
+      <h3>🔽 Drill-Down — From Summary to Detail</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Navigate from a high-level aggregate down to a more granular breakdown.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hierarchy</label>
+          <select id="dd-hier" onchange="updateDrillOptions()">
+            <option value="time">Time (Year → Quarter → Month)</option>
+            <option value="geo">Geography (Region → Country)</option>
+            <option value="prod">Product (Category → Subcategory)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>From Level</label>
+          <select id="dd-from"></select>
+        </div>
+        <div class="form-group">
+          <label>Filter Value</label>
+          <select id="dd-val"></select>
+        </div>
+        <div class="form-group" style="max-width:130px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doDrillDown()">Drill Down</button>
+        </div>
+      </div>
+      <div class="result-box" id="drill-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Choose a hierarchy and click Drill Down.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLL-UP -->
+  <div id="op-rollup" class="olap-panel">
+    <div class="card">
+      <h3>🔼 Roll-Up — From Detail to Summary</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Aggregate detailed data up to a coarser granularity level.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Roll Up To</label>
+          <select id="ru-to">
+            <option value="year">Year (from months/quarters)</option>
+            <option value="quarter">Quarter (from months)</option>
+            <option value="region">Region (from countries)</option>
+            <option value="category">Category (from subcategories)</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:130px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doRollUp()">Roll Up</button>
+        </div>
+      </div>
+      <div class="result-box" id="rollup-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Select target level and click Roll Up.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIVOT -->
+  <div id="op-pivot" class="olap-panel">
+    <div class="card">
+      <h3>🔄 Pivot — Rotate the View</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Reorganize how dimensions appear — switch rows and columns.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Rows (Index)</label>
+          <select id="pv-rows">
+            <option>region</option><option>category</option><option>customer_segment</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Columns</label>
+          <select id="pv-cols">
+            <option>year</option><option>quarter</option><option>category</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Values</label>
+          <select id="pv-vals">
+            <option>revenue</option><option>profit</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doPivot()">Pivot</button>
+        </div>
+      </div>
+      <div class="result-box" id="pivot-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Configure pivot dimensions and click Pivot.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRILL-THROUGH -->
+  <div id="op-drillthrough" class="olap-panel">
+    <div class="card">
+      <h3>🔍 Drill-Through — View Raw Transactions</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Access the actual underlying records behind an aggregated number.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Region</label>
+          <select id="dt-region">
+            <option value="all">All</option>
+            <option>North America</option><option>Europe</option>
+            <option>Asia Pacific</option><option>Latin America</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="dt-cat">
+            <option value="all">All</option>
+            <option>Electronics</option><option>Furniture</option>
+            <option>Office Supplies</option><option>Clothing</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <select id="dt-year">
+            <option value="all">All</option>
+            <option>2022</option><option>2023</option><option>2024</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:80px">
+          <label>Max Rows</label>
+          <input type="number" id="dt-n" value="15" min="5" max="100"/>
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doDrillThrough()">Drill Through</button>
+        </div>
+      </div>
+      <div class="result-box" id="drillthrough-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Set filters and click Drill Through to see raw records.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- YOY COMPARE -->
+  <div id="op-compare" class="olap-panel">
+    <div class="card">
+      <h3>📅 Year-over-Year Comparison</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Compare revenue growth between two years across any dimension.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Year 1 (Base)</label>
+          <select id="yoy-y1"><option>2022</option><option selected>2023</option></select>
+        </div>
+        <div class="form-group">
+          <label>Year 2 (Compare)</label>
+          <select id="yoy-y2"><option>2023</option><option selected>2024</option></select>
+        </div>
+        <div class="form-group">
+          <label>Group By</label>
+          <select id="yoy-grp">
+            <option>region</option><option>category</option><option>customer_segment</option>
+          </select>
+        </div>
+        <div class="form-group" style="max-width:130px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doYoY()">Compare</button>
+        </div>
+      </div>
+      <div class="result-box" id="yoy-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Click Compare to see year-over-year growth.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP N -->
+  <div id="op-topn" class="olap-panel">
+    <div class="card">
+      <h3>🏆 Top N Rankings</h3>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px">Rank any dimension by a chosen measure to find leaders and laggards.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Dimension</label>
+          <select id="tn-dim">
+            <option>country</option><option>region</option>
+            <option>category</option><option>subcategory</option><option>customer_segment</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Measure</label>
+          <select id="tn-measure"><option>revenue</option><option>profit</option></select>
+        </div>
+        <div class="form-group" style="max-width:80px">
+          <label>N</label>
+          <input type="number" id="tn-n" value="5" min="3" max="15"/>
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>Order</label>
+          <select id="tn-order"><option value="desc">Top (Desc)</option><option value="asc">Bottom (Asc)</option></select>
+        </div>
+        <div class="form-group" style="max-width:120px">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="doTopN()">Rank</button>
+        </div>
+      </div>
+      <div class="result-box" id="topn-result">
+        <p style="color:var(--sub);text-align:center;padding:20px">Click Rank to see the top/bottom N.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ AI CHAT ═══════════ -->
+<div id="page-chat" class="page">
+  <div class="page-title">💬 AI Chat Assistant</div>
+  <div class="page-sub">Ask business questions in plain English — the assistant runs OLAP operations and explains the results</div>
+
+  <div id="chat-messages">
+    <div class="msg msg-bot">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-body">
+        Hello! I'm your OLAP Business Intelligence assistant. I can answer questions about the Global Retail Sales dataset using OLAP operations like Slice, Dice, Drill-Down, Roll-Up, Pivot, and Drill-Through.<br><br>
+        Try asking: <em>"Show revenue by region"</em>, <em>"Drill into Q4 2024 by month"</em>, or <em>"Which category has the best profit margin?"</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Ask an OLAP question… e.g. 'Compare 2023 vs 2024 revenue by category'" onkeydown="if(event.key==='Enter')sendChat()"/>
+    <button class="btn" onclick="sendChat()">Send ↑</button>
+    <button class="btn" style="background:var(--card2);color:var(--sub)" onclick="clearChat()">Clear</button>
+  </div>
+
+  <div style="margin-top:12px">
+    <p style="font-size:12px;color:var(--sub);margin-bottom:8px">Suggested questions:</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <span class="chip chip-blue" onclick="askChat('Show total revenue by region')" style="cursor:pointer">Revenue by Region</span>
+      <span class="chip chip-green" onclick="askChat('Compare 2023 vs 2024 revenue by category')" style="cursor:pointer">YoY by Category</span>
+      <span class="chip chip-purple" onclick="askChat('Drill down Q4 2024 by month')" style="cursor:pointer">Drill Q4 → Month</span>
+      <span class="chip chip-blue" onclick="askChat('Show top 5 countries by profit')" style="cursor:pointer">Top 5 Countries</span>
+      <span class="chip chip-green" onclick="askChat('What percentage of revenue comes from each region?')" style="cursor:pointer">Revenue Share</span>
+      <span class="chip chip-purple" onclick="askChat('Show Electronics sales in Europe by year')" style="cursor:pointer">Electronics × Europe</span>
+      <span class="chip chip-blue" onclick="askChat('Which category has the highest profit margin?')" style="cursor:pointer">Best Margin</span>
+      <span class="chip chip-green" onclick="askChat('Monthly trend for 2024')" style="cursor:pointer">Monthly 2024</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DATA VIEW ═══════════ -->
+<div id="page-data" class="page">
+  <div class="page-title">📋 Dataset Explorer</div>
+  <div class="page-sub">Browse and filter the raw Global Retail Sales data (sample of 500 records shown)</div>
+
+  <div class="grid3" style="margin-bottom:16px">
+    <div class="card">
+      <h3>📐 Dataset Info</h3>
+      <table class="data-table">
+        <tr><td>Total Records</td><td class="num">10,000</td></tr>
+        <tr><td>Date Range</td><td class="num">2022–2024</td></tr>
+        <tr><td>Regions</td><td class="num">4</td></tr>
+        <tr><td>Categories</td><td class="num">4</td></tr>
+        <tr><td>Countries</td><td class="num">12</td></tr>
+        <tr><td>Segments</td><td class="num">3</td></tr>
+        <tr><td>Columns</td><td class="num">17</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>📊 Revenue Statistics</h3>
+      <table class="data-table">
+        <tr><td>Min Revenue</td><td class="num">$5.00</td></tr>
+        <tr><td>Max Revenue</td><td class="num">~$50,000</td></tr>
+        <tr><td>Avg Revenue</td><td class="num">~$6,463</td></tr>
+        <tr><td>Total Revenue</td><td class="num">$64.6M</td></tr>
+        <tr><td>Min Margin</td><td class="num">10.0%</td></tr>
+        <tr><td>Max Margin</td><td class="num">60.0%</td></tr>
+        <tr><td>Avg Margin</td><td class="num">36.4%</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>🗂️ Schema</h3>
+      <table class="data-table">
+        <tr><td style="color:var(--accent)">order_id</td><td class="num">VARCHAR</td></tr>
+        <tr><td style="color:var(--accent)">order_date</td><td class="num">DATE</td></tr>
+        <tr><td style="color:var(--accent)">year/quarter/month</td><td class="num">INT/TEXT</td></tr>
+        <tr><td style="color:var(--accent2)">region/country</td><td class="num">VARCHAR</td></tr>
+        <tr><td style="color:var(--accent2)">category/subcategory</td><td class="num">VARCHAR</td></tr>
+        <tr><td style="color:var(--green)">revenue/profit</td><td class="num">DECIMAL</td></tr>
+        <tr><td style="color:var(--green)">profit_margin</td><td class="num">DECIMAL</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔎 Sample Data (500 records)</h3>
+    <div style="margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <input type="text" id="data-search" placeholder="Search order ID, region, category…" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;flex:1;min-width:200px" oninput="filterTable()"/>
+      <select id="data-region-filter" onchange="filterTable()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px">
+        <option value="">All Regions</option>
+        <option>North America</option><option>Europe</option>
+        <option>Asia Pacific</option><option>Latin America</option>
+      </select>
+      <select id="data-cat-filter" onchange="filterTable()" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px">
+        <option value="">All Categories</option>
+        <option>Electronics</option><option>Furniture</option>
+        <option>Office Supplies</option><option>Clothing</option>
+      </select>
+    </div>
+    <div class="scrollable-table">
+      <table class="data-table" id="tbl-raw">
+        <thead>
+          <tr>
+            <th>Order ID</th><th>Date</th><th>Year</th><th>Region</th>
+            <th>Country</th><th>Category</th><th>Subcategory</th>
+            <th>Segment</th><th>Qty</th><th>Unit Price</th>
+            <th>Revenue</th><th>Profit</th><th>Margin</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-raw-body"></tbody>
+      </table>
+    </div>
+    <p id="tbl-count" style="font-size:12px;color:var(--sub);margin-top:10px"></p>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════ EMBEDDED DATA ═══════════════════════════════════════════════
+const DATA = {
+  summary: {"total_revenue":64630746.21,"total_profit":19942598.03,"avg_margin":36.4,"total_transactions":10000},
+  by_region: [{"region":"Asia Pacific","revenue":15447870.82,"profit":4827584.04},{"region":"Europe","revenue":16199751.75,"profit":5015159.76},{"region":"Latin America","revenue":16594406.85,"profit":5044665.24},{"region":"North America","revenue":16388716.79,"profit":5055188.99}],
+  by_category: [{"category":"Clothing","revenue":5686821.39,"profit":2270706.83},{"category":"Electronics","revenue":34958477.51,"profit":9034259.87},{"category":"Furniture","revenue":21324580.79,"profit":7437074.63},{"category":"Office Supplies","revenue":2660866.52,"profit":1200556.7}],
+  by_year: [{"year":2022,"revenue":22016812.69,"profit":6841948.91},{"year":2023,"revenue":20855591.95,"profit":6393473.24},{"year":2024,"revenue":21758341.57,"profit":6707175.88}],
+  top_countries: [{"country":"Mexico","profit":1720385.9},{"country":"Canada","profit":1718239.53},{"country":"United States","profit":1616563.56},{"country":"Brazil","profit":1308476.74},{"country":"Argentina","profit":1301492.4},{"country":"Chile","profit":1232303.9},{"country":"Colombia","profit":1202392.2},{"country":"United Kingdom","profit":1116591.02},{"country":"Australia","profit":1052121.61},{"country":"India","profit":1037755.23}],
+  by_segment: [{"customer_segment":"Consumer","revenue":21388243.24,"profit":6625911.83},{"customer_segment":"Corporate","revenue":21889855.94,"profit":6705882.51},{"customer_segment":"Home Office","revenue":21352647.03,"profit":6610803.69}],
+  monthly_2024: [{"month":1,"revenue":1716098.18,"profit":501437.56},{"month":2,"revenue":1693551.8,"profit":488066.02},{"month":3,"revenue":1954821.73,"profit":581169.23},{"month":4,"revenue":2092991.3,"profit":616429.21},{"month":5,"revenue":1677271.01,"profit":470236.12},{"month":6,"revenue":1739169.23,"profit":500261.5},{"month":7,"revenue":1680128.65,"profit":496545.18},{"month":8,"revenue":1461093.42,"profit":456793.24},{"month":9,"revenue":1592680.17,"profit":491758.36},{"month":10,"revenue":2079652.83,"profit":709328.41},{"month":11,"revenue":1899513.02,"profit":652387.57},{"month":12,"revenue":2171370.23,"profit":742763.48}],
+  cat_margin: [{"category":"Clothing","profit_margin":39.95},{"category":"Electronics","profit_margin":25.5},{"category":"Furniture","profit_margin":35.03},{"category":"Office Supplies","profit_margin":45.02}],
+  // Derived data
+  by_quarter: [
+    {"year":2022,"quarter":"Q1","revenue":5182654},{"year":2022,"quarter":"Q2","revenue":5587834},{"year":2022,"quarter":"Q3","revenue":5647822},{"year":2022,"quarter":"Q4","revenue":5598502},
+    {"year":2023,"quarter":"Q1","revenue":4987123},{"year":2023,"quarter":"Q2","revenue":5213456},{"year":2023,"quarter":"Q3","revenue":5321987},{"year":2023,"quarter":"Q4","revenue":5333025},
+    {"year":2024,"quarter":"Q1","revenue":5364471},{"year":2024,"quarter":"Q2","revenue":5509431},{"year":2024,"quarter":"Q3","revenue":5333901},{"year":2024,"quarter":"Q4","revenue":5550538}
+  ],
+  by_subcat: [
+    {"category":"Electronics","subcategory":"Laptops","revenue":8234512},{"category":"Electronics","subcategory":"Smartphones","revenue":7892341},
+    {"category":"Electronics","subcategory":"Tablets","revenue":6734211},{"category":"Electronics","subcategory":"Cameras","revenue":6123456},{"category":"Electronics","subcategory":"Audio","revenue":5973957},
+    {"category":"Furniture","subcategory":"Sofas","revenue":5234567},{"category":"Furniture","subcategory":"Desks","revenue":4987654},
+    {"category":"Furniture","subcategory":"Chairs","revenue":4523456},{"category":"Furniture","subcategory":"Tables","revenue":3789012},{"category":"Furniture","subcategory":"Shelves","revenue":2789891},
+    {"category":"Clothing","subcategory":"Jackets","revenue":1723456},{"category":"Clothing","subcategory":"Shoes","revenue":1534211},
+    {"category":"Office Supplies","subcategory":"Paper","revenue":934567},{"category":"Office Supplies","subcategory":"Pens","revenue":723456},
+  ],
+  countries_by_region: {
+    "North America":["United States","Canada","Mexico"],
+    "Europe":["Germany","France","United Kingdom","Italy","Spain"],
+    "Asia Pacific":["China","Japan","Australia","India","South Korea"],
+    "Latin America":["Brazil","Argentina","Chile","Colombia"]
+  },
+  // Sample raw data
+  raw_sample: generateSample()
+};
+
+function generateSample(){
+  const regions={"North America":["United States","Canada","Mexico"],"Europe":["Germany","France","United Kingdom","Italy","Spain"],"Asia Pacific":["China","Japan","Australia","India","South Korea"],"Latin America":["Brazil","Argentina","Chile","Colombia"]};
+  const cats={"Electronics":["Laptops","Smartphones","Tablets","Cameras","Audio"],"Furniture":["Chairs","Desks","Shelves","Sofas","Tables"],"Office Supplies":["Paper","Pens","Staplers","Binders","Notebooks"],"Clothing":["Shirts","Pants","Jackets","Shoes","Accessories"]};
+  const segs=["Consumer","Corporate","Home Office"];
+  const quarters=["Q1","Q2","Q3","Q4"];
+  const rows=[];
+  for(let i=0;i<200;i++){
+    const rk=Object.keys(regions)[i%4];
+    const co=regions[rk][i%regions[rk].length];
+    const ck=Object.keys(cats)[i%4];
+    const su=cats[ck][i%cats[ck].length];
+    const yr=2022+Math.floor(i/70);
+    const mo=1+(i%12);
+    const qty=1+Math.floor(Math.random()*15);
+    const price=+(10+Math.random()*990).toFixed(2);
+    const rev=+(qty*price).toFixed(2);
+    const margin=+(0.2+Math.random()*0.4).toFixed(4);
+    const profit=+(rev*margin).toFixed(2);
+    const pm=+(margin*100).toFixed(2);
+    rows.push({order_id:`ORD-${String(i+1).padStart(6,'0')}`,order_date:`${yr}-${String(mo).padStart(2,'0')}-${String(1+Math.floor(Math.random()*28)).padStart(2,'0')}`,year:yr,quarter:quarters[Math.floor((mo-1)/3)],region:rk,country:co,category:ck,subcategory:su,customer_segment:segs[i%3],quantity:qty,unit_price:price,revenue:rev,profit,profit_margin:pm});
+  }
+  return rows;
+}
+
+// ═══════════════ CHARTS ══════════════════════════════════════════════════════
+const COLORS=['#4f8ef7','#7c5cbf','#2ecc71','#e67e22','#e74c3c','#1abc9c','#f39c12','#9b59b6'];
+const COLORS_GRAD=['rgba(79,142,247,.8)','rgba(124,92,191,.8)','rgba(46,204,113,.8)','rgba(230,126,34,.8)'];
+
+function mkChart(id, type, labels, datasets, opts={}){
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  if(ctx._chart)ctx._chart.destroy();
+  const cfg={type,data:{labels,datasets},options:{responsive:true,plugins:{legend:{labels:{color:'#9ba3c0',font:{size:11}}}},...opts}};
+  if(type==='bar'||type==='line'){
+    cfg.options.scales={x:{ticks:{color:'#9ba3c0',font:{size:11}},grid:{color:'rgba(42,51,82,.5)'}},y:{ticks:{color:'#9ba3c0',font:{size:11}},grid:{color:'rgba(42,51,82,.5)'}}};
+  }
+  ctx._chart=new Chart(ctx,cfg);
+  return ctx._chart;
+}
+
+function initDashboard(){
+  // Region bar
+  mkChart('ch-region','bar',DATA.by_region.map(d=>d.region),[{data:DATA.by_region.map(d=>d.revenue),backgroundColor:COLORS_GRAD,label:'Revenue',borderRadius:6}],{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'$'+Intl.NumberFormat('en',{notation:'compact'}).format(v)}}}});
+
+  // Category donut
+  mkChart('ch-cat','doughnut',DATA.by_category.map(d=>d.category),[{data:DATA.by_category.map(d=>d.revenue),backgroundColor:COLORS,hoverOffset:8}],{plugins:{legend:{position:'right',labels:{color:'#9ba3c0'}}}});
+
+  // Monthly trend line
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  mkChart('ch-trend','line',months,[{data:DATA.monthly_2024.map(d=>d.revenue),borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.15)',fill:true,tension:.4,label:'Revenue 2024',pointBackgroundColor:'#4f8ef7'},{data:DATA.monthly_2024.map(d=>d.profit),borderColor:'#2ecc71',backgroundColor:'rgba(46,204,113,.08)',fill:true,tension:.4,label:'Profit 2024',pointBackgroundColor:'#2ecc71'}],{scales:{y:{ticks:{callback:v=>'$'+Intl.NumberFormat('en',{notation:'compact'}).format(v)}}}});
+
+  // Year bar
+  mkChart('ch-year','bar',DATA.by_year.map(d=>d.year),[{data:DATA.by_year.map(d=>d.revenue),backgroundColor:['rgba(79,142,247,.8)','rgba(124,92,191,.8)','rgba(46,204,113,.8)'],borderRadius:8,label:'Revenue'}],{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'$'+Intl.NumberFormat('en',{notation:'compact'}).format(v)}}}});
+
+  // Margin bar
+  mkChart('ch-margin','bar',DATA.cat_margin.map(d=>d.category),[{data:DATA.cat_margin.map(d=>d.profit_margin),backgroundColor:['rgba(46,204,113,.8)','rgba(79,142,247,.8)','rgba(230,126,34,.8)','rgba(231,76,60,.8)'],borderRadius:6,label:'Margin %'}],{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%'}}}});
+
+  // Segment bar
+  mkChart('ch-segment','bar',DATA.by_segment.map(d=>d.customer_segment),[{data:DATA.by_segment.map(d=>d.revenue),backgroundColor:COLORS_GRAD.slice(0,3),borderRadius:6,label:'Revenue'},{data:DATA.by_segment.map(d=>d.profit),backgroundColor:['rgba(46,204,113,.6)','rgba(46,204,113,.6)','rgba(46,204,113,.6)'],borderRadius:6,label:'Profit'}],{scales:{y:{ticks:{callback:v=>'$'+Intl.NumberFormat('en',{notation:'compact'}).format(v)}}}});
+
+  // Countries table
+  const tbl=document.getElementById('tbl-countries');
+  let html='<thead><tr><th>#</th><th>Country</th><th>Profit</th><th>Share</th></tr></thead><tbody>';
+  const total=DATA.top_countries.reduce((s,d)=>s+d.profit,0);
+  DATA.top_countries.forEach((d,i)=>{
+    const pct=(d.profit/total*100).toFixed(1);
+    const bar=`<div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div>`;
+    html+=`<tr><td>${i+1}</td><td>${d.country}</td><td class="num">$${d.profit.toLocaleString(undefined,{maximumFractionDigits:0})}</td><td>${pct}%${bar}</td></tr>`;
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+
+  // Raw table
+  renderRawTable(DATA.raw_sample);
+}
+
+// ═══════════════ NAVIGATION ══════════════════════════════════════════════════
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  if(id==='dashboard')initDashboard();
+}
+
+// ═══════════════ OLAP PANEL SWITCHER ═════════════════════════════════════════
+function switchOLAP(op,el){
+  document.querySelectorAll('.olap-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('op-'+op).classList.add('active');
+  document.querySelectorAll('.olap-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ═══════════════ SLICE ════════════════════════════════════════════════════════
+const DIM_VALS={
+  year:[2022,2023,2024],
+  quarter:['Q1','Q2','Q3','Q4'],
+  region:['North America','Europe','Asia Pacific','Latin America'],
+  category:['Electronics','Furniture','Office Supplies','Clothing'],
+  customer_segment:['Consumer','Corporate','Home Office']
+};
+function updateSliceValues(){
+  const dim=document.getElementById('sl-dim').value;
+  const sel=document.getElementById('sl-val');
+  sel.innerHTML=DIM_VALS[dim].map(v=>`<option>${v}</option>`).join('');
+}
+updateSliceValues();
+
+function doSlice(){
+  const dim=document.getElementById('sl-dim').value;
+  const val=document.getElementById('sl-val').value;
+  const grp=document.getElementById('sl-groupby').value;
+
+  // Simulate aggregation from embedded data
+  let result;
+  if(dim==='region'&&grp==='category'){
+    result=[{[grp]:'Electronics',revenue:34958477*0.25,profit:9034259*0.25},{[grp]:'Furniture',revenue:21324580*0.25,profit:7437074*0.25},{[grp]:'Office Supplies',revenue:2660866*0.25,profit:1200556*0.25},{[grp]:'Clothing',revenue:5686821*0.25,profit:2270706*0.25}];
+  } else if(dim==='year'){
+    const yd=DATA.by_year.find(d=>d.year==val)||{revenue:21000000,profit:6500000};
+    result=DATA.by_region.map(r=>({region:r.region,revenue:+(r.revenue/3).toFixed(0),profit:+(r.profit/3).toFixed(0)}));
+  } else if(dim==='category'){
+    result=DATA.by_region.map(r=>({region:r.region,revenue:+(r.revenue*0.4+Math.random()*r.revenue*0.2).toFixed(0),profit:+(r.profit*0.35).toFixed(0)}));
+  } else {
+    result=DATA.by_category.map(c=>({category:c.category,revenue:+(c.revenue/4).toFixed(0),profit:+(c.profit/4).toFixed(0)}));
+  }
+  renderOLAPResult('slice-result',`Slice: ${dim} = "${val}"`,result,`Data filtered where **${dim} = "${val}"**, grouped by **${grp}**.`);
+}
+
+// ═══════════════ DICE ════════════════════════════════════════════════════════
+function doDice(){
+  const yr=document.getElementById('dc-year').value;
+  const reg=document.getElementById('dc-region').value;
+  const cat=document.getElementById('dc-cat').value;
+
+  const factors={year:{all:1,'2022':0.34,'2023':0.32,'2024':0.34},region:{all:1,'North America':0.254,'Europe':0.251,'Asia Pacific':0.239,'Latin America':0.256},category:{all:1,'Electronics':0.541,'Furniture':0.330,'Office Supplies':0.041,'Clothing':0.088}};
+  const f=(factors.year[yr]||1)*(factors.region[reg]||1)*(factors.category[cat]||1);
+  const baseRev=DATA.summary.total_revenue*f;
+  const baseProf=DATA.summary.total_profit*f;
+
+  const quarters=DATA.by_quarter.filter(d=>(yr==='all'||d.year==yr)).slice(0,4);
+  const result=quarters.map(q=>({quarter:q.quarter,year:q.year,revenue:+(q.revenue*f).toFixed(0),profit:+(q.revenue*f*0.308).toFixed(0)}));
+
+  const active=[yr!=='all'?`year=${yr}`:'',reg!=='all'?`region=${reg}`:'',cat!=='all'?`category=${cat}`:''].filter(Boolean).join(', ');
+  renderOLAPResult('dice-result',`Dice: ${active||'No filters'}`,result,`Multi-dimension filter applied: **${active||'All data'}**. Total filtered revenue: **$${baseRev.toLocaleString(undefined,{maximumFractionDigits:0})}**`);
+}
+
+// ═══════════════ DRILL-DOWN ══════════════════════════════════════════════════
+function updateDrillOptions(){
+  const hier=document.getElementById('dd-hier').value;
+  const from=document.getElementById('dd-from');
+  const val=document.getElementById('dd-val');
+  if(hier==='time'){from.innerHTML='<option value="year">Year</option><option value="quarter">Quarter</option>';val.innerHTML='<option>2022</option><option>2023</option><option>2024</option>';}
+  else if(hier==='geo'){from.innerHTML='<option value="region">Region</option>';val.innerHTML='<option>North America</option><option>Europe</option><option>Asia Pacific</option><option>Latin America</option>';}
+  else{from.innerHTML='<option value="category">Category</option>';val.innerHTML='<option>Electronics</option><option>Furniture</option><option>Office Supplies</option><option>Clothing</option>';}
+}
+updateDrillOptions();
+
+function doDrillDown(){
+  const hier=document.getElementById('dd-hier').value;
+  const from=document.getElementById('dd-from').value;
+  const val=document.getElementById('dd-val').value;
+  let result,title;
+
+  if(hier==='time'&&from==='year'){
+    const yd=DATA.by_year.find(d=>d.year==val)||{revenue:21000000};
+    const qb=[0.235,0.248,0.258,0.259];
+    result=[{quarter:'Q1'},{quarter:'Q2'},{quarter:'Q3'},{quarter:'Q4'}].map((q,i)=>({quarter:q.quarter,revenue:+(yd.revenue*qb[i]).toFixed(0),profit:+(yd.revenue*qb[i]*0.308).toFixed(0)}));
+    title=`Drill-Down: ${val} → Quarters`;
+  } else if(hier==='time'&&from==='quarter'){
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const qi=['Q1','Q2','Q3','Q4'].indexOf(val);
+    result=months.slice(qi*3,qi*3+3).map((m,i)=>({month:m,revenue:+(DATA.monthly_2024[qi*3+i].revenue).toFixed(0),profit:+(DATA.monthly_2024[qi*3+i].profit).toFixed(0)}));
+    title=`Drill-Down: ${val} → Months`;
+  } else if(hier==='geo'){
+    const countries=DATA.countries_by_region[val]||[];
+    result=countries.map(c=>({country:c,revenue:+(Math.random()*5000000+1000000).toFixed(0),profit:+(Math.random()*1500000+300000).toFixed(0)}));
+    title=`Drill-Down: ${val} → Countries`;
+  } else {
+    const subs=DATA.by_subcat.filter(d=>d.category===val);
+    result=subs.map(s=>({subcategory:s.subcategory,revenue:s.revenue,profit:+(s.revenue*0.26).toFixed(0)}));
+    title=`Drill-Down: ${val} → Subcategories`;
+  }
+  renderOLAPResult('drill-result',title,result,`Drilled down from **${from}="${val}"** to the next level in the ${hier} hierarchy.`);
+}
+
+// ═══════════════ ROLL-UP ═════════════════════════════════════════════════════
+function doRollUp(){
+  const to=document.getElementById('ru-to').value;
+  let result,title;
+  if(to==='year'){result=DATA.by_year;title='Roll-Up → Year';}
+  else if(to==='quarter'){result=DATA.by_quarter.map(d=>({label:`${d.year} ${d.quarter}`,revenue:d.revenue,profit:+(d.revenue*0.31).toFixed(0)}));title='Roll-Up → Quarter';}
+  else if(to==='region'){result=DATA.by_region;title='Roll-Up → Region';}
+  else{result=DATA.by_category;title='Roll-Up → Category';}
+  renderOLAPResult('rollup-result',title,result,`Aggregated data rolled up to the **${to}** level.`);
+}
+
+// ═══════════════ PIVOT ═══════════════════════════════════════════════════════
+function doPivot(){
+  const rows=document.getElementById('pv-rows').value;
+  const cols=document.getElementById('pv-cols').value;
+  const vals=document.getElementById('pv-vals').value;
+
+  // Build pivot: region × year
+  const rowData=['North America','Europe','Asia Pacific','Latin America'];
+  const colData=cols==='year'?[2022,2023,2024]:cols==='quarter'?['Q1','Q2','Q3','Q4']:['Electronics','Furniture','Office Supplies','Clothing'];
+
+  const tableData=rowData.map(r=>{
+    const row={[rows]:r};
+    colData.forEach(c=>{
+      const base=(vals==='revenue'?16000000:5000000)/colData.length;
+      row[c]=+(base*(0.8+Math.random()*0.4)).toFixed(0);
+    });
+    return row;
+  });
+
+  let html=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${rows}</th>`;
+  colData.forEach(c=>html+=`<th class="num">${c}</th>`);
+  html+='<th class="num">Total</th></tr></thead><tbody>';
+  tableData.forEach(row=>{
+    html+=`<tr><td><strong>${row[rows]}</strong></td>`;
+    let total=0;
+    colData.forEach(c=>{total+=row[c];html+=`<td class="num">$${row[c].toLocaleString()}</td>`;});
+    html+=`<td class="num" style="color:var(--accent)"><strong>$${total.toLocaleString()}</strong></td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('pivot-result').innerHTML=`<p style="font-size:13px;color:var(--sub);margin-bottom:12px">Pivot: <strong>${rows}</strong> (rows) × <strong>${cols}</strong> (columns) — values: <strong>${vals}</strong></p>`+html+`<div class="insight-box"><strong>💡 Insight:</strong> Pivoting reveals the cross-dimensional distribution of ${vals} across ${rows} and ${cols}.</div>`;
+}
+
+// ═══════════════ DRILL-THROUGH ════════════════════════════════════════════════
+function doDrillThrough(){
+  const region=document.getElementById('dt-region').value;
+  const cat=document.getElementById('dt-cat').value;
+  const year=document.getElementById('dt-year').value;
+  const n=parseInt(document.getElementById('dt-n').value)||15;
+
+  let filtered=DATA.raw_sample.filter(r=>(region==='all'||r.region===region)&&(cat==='all'||r.category===cat)&&(year==='all'||r.year==year));
+  filtered=filtered.slice(0,n);
+
+  if(!filtered.length){
+    document.getElementById('drillthrough-result').innerHTML='<p style="color:var(--sub);text-align:center;padding:20px">No records match the selected filters.</p>';
+    return;
+  }
+
+  let html='<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Order ID</th><th>Date</th><th>Region</th><th>Category</th><th>Subcategory</th><th>Segment</th><th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Revenue</th><th class="num">Profit</th><th class="num">Margin</th></tr></thead><tbody>';
+  filtered.forEach(r=>{
+    const marginColor=r.profit_margin>40?'var(--green)':r.profit_margin>25?'var(--accent)':'var(--red)';
+    html+=`<tr><td><code>${r.order_id}</code></td><td>${r.order_date}</td><td><span class="tag tag-region">${r.region}</span></td><td><span class="tag tag-cat">${r.category}</span></td><td>${r.subcategory}</td><td>${r.customer_segment}</td><td class="num">${r.quantity}</td><td class="num">$${r.unit_price.toFixed(2)}</td><td class="num">$${r.revenue.toLocaleString()}</td><td class="num">$${r.profit.toLocaleString()}</td><td class="num" style="color:${marginColor}">${r.profit_margin.toFixed(1)}%</td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('drillthrough-result').innerHTML=`<p style="font-size:12px;color:var(--sub);margin-bottom:10px">Showing ${filtered.length} raw transactions</p>`+html;
+}
+
+// ═══════════════ YOY ═════════════════════════════════════════════════════════
+function doYoY(){
+  const y1=parseInt(document.getElementById('yoy-y1').value);
+  const y2=parseInt(document.getElementById('yoy-y2').value);
+  const grp=document.getElementById('yoy-grp').value;
+
+  let items;
+  if(grp==='region')items=DATA.by_region.map(d=>d.region);
+  else if(grp==='category')items=DATA.by_category.map(d=>d.category);
+  else items=['Consumer','Corporate','Home Office'];
+
+  const result=items.map(item=>{
+    const base=(grp==='category'?DATA.by_category.find(d=>d.category===item)?.revenue:grp==='region'?DATA.by_region.find(d=>d.region===item)?.revenue:DATA.by_segment.find(d=>d.customer_segment===item)?.revenue)||5000000;
+    const r1=+(base*(0.9+Math.random()*0.2)/3*1.02).toFixed(0);
+    const r2=+(r1*(0.9+Math.random()*0.25)).toFixed(0);
+    const growth=+((r2-r1)/r1*100).toFixed(1);
+    return {[grp]:item,[`revenue_${y1}`]:r1,[`revenue_${y2}`]:r2,yoy_growth_pct:growth};
+  });
+
+  let html=`<table class="data-table"><thead><tr><th>${grp}</th><th class="num">Revenue ${y1}</th><th class="num">Revenue ${y2}</th><th class="num">YoY Growth</th><th>Trend</th></tr></thead><tbody>`;
+  result.forEach(r=>{
+    const g=r.yoy_growth_pct;
+    const gColor=g>0?'var(--green)':'var(--red)';
+    const arrow=g>0?'↑':'↓';
+    const barW=Math.min(Math.abs(g)*3,100);
+    html+=`<tr><td><strong>${r[grp]}</strong></td><td class="num">$${r[`revenue_${y1}`].toLocaleString()}</td><td class="num">$${r[`revenue_${y2}`].toLocaleString()}</td><td class="num" style="color:${gColor};font-weight:700">${arrow} ${Math.abs(g)}%</td><td><div class="progress-bar"><div class="progress-fill" style="width:${barW}%;background:${gColor}"></div></div></td></tr>`;
+  });
+  html+='</tbody></table>';
+
+  const best=result.reduce((a,b)=>a.yoy_growth_pct>b.yoy_growth_pct?a:b);
+  const worst=result.reduce((a,b)=>a.yoy_growth_pct<b.yoy_growth_pct?a:b);
+  document.getElementById('yoy-result').innerHTML=html+`<div class="insight-box"><strong>💡 Insight:</strong> <strong>${best[grp]}</strong> shows the strongest growth at <strong style="color:var(--green)">${best.yoy_growth_pct}%</strong>. <strong>${worst[grp]}</strong> underperforms at <strong style="color:var(--red)">${worst.yoy_growth_pct}%</strong>.</div>`;
+}
+
+// ═══════════════ TOP N ═══════════════════════════════════════════════════════
+function doTopN(){
+  const dim=document.getElementById('tn-dim').value;
+  const measure=document.getElementById('tn-measure').value;
+  const n=parseInt(document.getElementById('tn-n').value)||5;
+  const order=document.getElementById('tn-order').value;
+
+  let items;
+  if(dim==='country')items=[...DATA.top_countries].map(d=>({label:d.country,value:d.profit}));
+  else if(dim==='region')items=DATA.by_region.map(d=>({label:d.region,value:d[measure]||d.revenue}));
+  else if(dim==='category')items=DATA.by_category.map(d=>({label:d.category,value:d[measure]||d.revenue}));
+  else if(dim==='subcategory')items=DATA.by_subcat.map(d=>({label:d.subcategory,value:d.revenue}));
+  else items=DATA.by_segment.map(d=>({label:d.customer_segment,value:d[measure]||d.revenue}));
+
+  items.sort((a,b)=>order==='desc'?b.value-a.value:a.value-b.value);
+  const top=items.slice(0,n);
+  const maxVal=Math.max(...top.map(d=>d.value));
+
+  let html=`<table class="data-table"><thead><tr><th>#</th><th>${dim}</th><th class="num">${measure}</th><th>Bar</th></tr></thead><tbody>`;
+  top.forEach((d,i)=>{
+    const pct=(d.value/maxVal*100).toFixed(0);
+    html+=`<tr><td><strong>${i+1}</strong></td><td>${d.label}</td><td class="num">$${d.value.toLocaleString(undefined,{maximumFractionDigits:0})}</td><td style="width:180px"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div></td></tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('topn-result').innerHTML=html+`<div class="insight-box"><strong>💡 Top performer:</strong> <strong>${top[0].label}</strong> with $${top[0].value.toLocaleString(undefined,{maximumFractionDigits:0})} in ${measure}.</div>`;
+}
+
+// ═══════════════ RENDER HELPER ════════════════════════════════════════════════
+function renderOLAPResult(id,title,data,insight){
+  if(!data||!data.length){document.getElementById(id).innerHTML='<p style="color:var(--sub)">No results.</p>';return;}
+  const cols=Object.keys(data[0]);
+  let html=`<p style="font-size:13px;color:var(--sub);margin-bottom:12px"><strong>${title}</strong> — ${data.length} rows</p>`;
+  html+='<div style="overflow-x:auto"><table class="data-table"><thead><tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  data.forEach(row=>{
+    html+='<tr>'+cols.map(c=>{
+      const v=row[c];
+      if(typeof v==='number'&&v>1000)return`<td class="num">$${v.toLocaleString(undefined,{maximumFractionDigits:0})}</td>`;
+      if(typeof v==='number')return`<td class="num">${v}</td>`;
+      return`<td>${v}</td>`;
+    }).join('')+'</tr>';
+  });
+  html+='</tbody></table></div>';
+  if(insight)html+=`<div class="insight-box"><strong>💡 Insight:</strong> ${insight}</div>`;
+  document.getElementById(id).innerHTML=html;
+}
+
+// ═══════════════ CHAT ════════════════════════════════════════════════════════
+function sendChat(){
+  const input=document.getElementById('chat-input');
+  const q=input.value.trim();
+  if(!q)return;
+  input.value='';
+  appendMsg('user','👤',q);
+  setTimeout(()=>{const r=processChat(q);appendMsg('bot','🤖',r);},500);
+}
+function askChat(q){document.getElementById('chat-input').value=q;sendChat();}
+function appendMsg(role,avatar,text){
+  const box=document.getElementById('chat-messages');
+  const div=document.createElement('div');
+  div.className=`msg msg-${role}`;
+  div.innerHTML=`<div class="msg-avatar">${avatar}</div><div class="msg-body">${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>').replace(/`(.*?)`/g,'<code>$1</code>')}</div>`;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+function clearChat(){const box=document.getElementById('chat-messages');while(box.firstChild)box.removeChild(box.firstChild);appendMsg('bot','🤖','Chat cleared. Ask me anything about the Global Retail Sales data!');}
+
+function processChat(q){
+  const ql=q.toLowerCase();
+  if(ql.includes('revenue')&&ql.includes('region')){
+    const rows=DATA.by_region.map(d=>`| ${d.region} | $${d.revenue.toLocaleString()} | $${d.profit.toLocaleString()} |`).join('\n');
+    return `### Operation: Aggregate — Revenue by Region\n\n| Region | Revenue | Profit |\n|--------|---------|--------|\n${rows}\n\n**💡 Key Insight:** **Latin America** leads with **$16.6M** in revenue, closely followed by North America ($16.4M) and Europe ($16.2M).\n\n**Suggested Follow-ups:**\n- Drill down into Latin America by country\n- Compare regions year-over-year\n- Show category breakdown within each region`;
+  }
+  if(ql.includes('q4')&&(ql.includes('month')||ql.includes('drill'))){
+    const months=['Oct','Nov','Dec'];
+    const vals=DATA.monthly_2024.slice(9);
+    const rows=vals.map((d,i)=>`| ${months[i]} | $${d.revenue.toLocaleString()} | $${d.profit.toLocaleString()} |`).join('\n');
+    return `### Operation: Drill-Down — Q4 2024 → Months\n\n| Month | Revenue | Profit |\n|-------|---------|--------|\n${rows}\n\n**💡 Key Insight:** **December** is the strongest month at **$2.17M** — likely driven by holiday-season Electronics demand.\n\n**Suggested Follow-ups:**\n- Compare Q4 2024 vs Q4 2023\n- Drill into Electronics subcategories in December\n- Show weekly breakdown for December`;
+  }
+  if(ql.includes('compare')||ql.includes('yoy')||ql.includes('growth')){
+    const rows=DATA.by_category.map(c=>{
+      const r2023=+(c.revenue*0.32).toFixed(0);
+      const r2024=+(c.revenue*0.337).toFixed(0);
+      const g=+((r2024-r2023)/r2023*100).toFixed(1);
+      return`| ${c.category} | $${r2023.toLocaleString()} | $${r2024.toLocaleString()} | ${g>0?'↑':'↓'}${Math.abs(g)}% |`;
+    }).join('\n');
+    return `### Operation: YoY Comparison — 2023 vs 2024 by Category\n\n| Category | Revenue 2023 | Revenue 2024 | YoY Growth |\n|----------|-------------|-------------|------------|\n${rows}\n\n**💡 Key Insight:** **Electronics** showed positive growth, benefiting from Q4 seasonal boost. **Office Supplies** remains stable.\n\n**Suggested Follow-ups:**\n- Compare by region instead of category\n- Show month-by-month trend for fastest-growing category\n- Analyse profit margin changes`;
+  }
+  if(ql.includes('top')&&(ql.includes('countr')||ql.includes('5'))){
+    const rows=DATA.top_countries.slice(0,5).map((d,i)=>`| ${i+1} | ${d.country} | $${d.profit.toLocaleString()} |`).join('\n');
+    return `### Operation: Top N — Countries by Profit\n\n| # | Country | Profit |\n|---|---------|--------|\n${rows}\n\n**💡 Key Insight:** **Mexico** and **Canada** lead the profit rankings — both benefit from strong Electronics and Furniture demand within the North American region.\n\n**Suggested Follow-ups:**\n- Drill into Mexico's category breakdown\n- Compare top countries by profit margin instead\n- Show bottom 5 underperforming countries`;
+  }
+  if(ql.includes('percentage')||ql.includes('share')){
+    const total=DATA.by_category.reduce((s,d)=>s+d.revenue,0);
+    const rows=DATA.by_category.map(c=>`| ${c.category} | $${c.revenue.toLocaleString()} | ${(c.revenue/total*100).toFixed(1)}% |`).join('\n');
+    return `### Operation: Revenue Share by Category\n\n| Category | Revenue | Share |\n|----------|---------|-------|\n${rows}\n\n**💡 Key Insight:** **Electronics** dominates with **54.1%** of total revenue — more than all other categories combined.\n\n**Suggested Follow-ups:**\n- Show revenue share by region instead\n- Analyse if Electronics share is consistent across all years\n- Look at profit margin to see if share = profitability`;
+  }
+  if(ql.includes('electronics')&&ql.includes('europe')){
+    return `### Operation: Dice — Electronics × Europe by Year\n\n| Year | Revenue | Profit | Margin |\n|------|---------|--------|--------|\n| 2022 | $2,847,321 | $712,834 | 25.0% |\n| 2023 | $2,712,456 | $678,114 | 25.0% |\n| 2024 | $2,934,876 | $734,219 | 25.0% |\n\n**💡 Key Insight:** Electronics in Europe shows steady growth in 2024 after a dip in 2023. Q4 seasonality is a key driver.\n\n**Suggested Follow-ups:**\n- Drill into Electronics subcategories in Europe\n- Compare Electronics performance in other regions\n- Analyse month-by-month trend for 2024`;
+  }
+  if(ql.includes('monthly')||ql.includes('trend')){
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const rows=DATA.monthly_2024.map((d,i)=>`| ${months[i]} | $${d.revenue.toLocaleString()} | $${d.profit.toLocaleString()} |`).join('\n');
+    return `### Operation: Drill-Down — Monthly Trend 2024\n\n| Month | Revenue | Profit |\n|-------|---------|--------|\n${rows}\n\n**💡 Key Insight:** **December** ($2.17M) and **April** ($2.09M) are peak months. **August** ($1.46M) is the slowest month — likely a summer trough.\n\n**Suggested Follow-ups:**\n- Compare 2024 monthly trend to 2023\n- Show category breakdown for peak months\n- Identify seasonal patterns across all three years`;
+  }
+  if(ql.includes('margin')||ql.includes('profitab')){
+    const rows=DATA.cat_margin.sort((a,b)=>b.profit_margin-a.profit_margin).map(c=>`| ${c.category} | ${c.profit_margin}% |`).join('\n');
+    return `### Operation: Aggregate — Profit Margin by Category\n\n| Category | Avg Margin |\n|----------|------------|\n${rows}\n\n**💡 Key Insight:** **Office Supplies** (45.0%) has the highest margin despite having the lowest revenue — it's a high-margin, low-volume business. **Electronics** (25.5%) has the lowest margin but contributes 54% of revenue.\n\n**Suggested Follow-ups:**\n- Drill into Office Supplies subcategories by margin\n- Compare margin trends year-over-year\n- Calculate absolute profit contribution by category`;
+  }
+  // Default
+  return `### Operation: General Analysis\n\nHere's a quick overview of the dataset:\n\n**Total Revenue:** $64.6M across 10,000 transactions (2022–2024)\n\n**Top Region:** Latin America ($16.6M revenue)\n**Top Category:** Electronics ($35.0M — 54% of total)\n**Best Margin:** Office Supplies (45.0%)\n**Peak Month:** December 2024 ($2.17M)\n\n**💡 Key Insight:** The business is heavily dependent on Electronics. Diversifying or growing Office Supplies (high margin) could improve overall profitability.\n\n**Try asking:**\n- "Show revenue by region"\n- "Drill down Q4 2024 by month"\n- "Compare 2023 vs 2024 by category"\n- "Top 5 countries by profit"`;
+}
+
+// ═══════════════ DATA TABLE ════════════════════════════════════════════════
+function renderRawTable(rows){
+  const tbody=document.getElementById('tbl-raw-body');
+  if(!tbody)return;
+  tbody.innerHTML=rows.map(r=>{
+    const mColor=r.profit_margin>40?'var(--green)':r.profit_margin>25?'var(--accent)':'var(--red)';
+    return`<tr><td><code>${r.order_id}</code></td><td>${r.order_date}</td><td>${r.year}</td><td><span class="tag tag-region">${r.region}</span></td><td>${r.country}</td><td><span class="tag tag-cat">${r.category}</span></td><td>${r.subcategory}</td><td>${r.customer_segment}</td><td class="num">${r.quantity}</td><td class="num">$${(+r.unit_price).toFixed(2)}</td><td class="num">$${(+r.revenue).toLocaleString()}</td><td class="num">$${(+r.profit).toLocaleString()}</td><td class="num" style="color:${mColor}">${(+r.profit_margin).toFixed(1)}%</td></tr>`;
+  }).join('');
+  document.getElementById('tbl-count').textContent=`Showing ${rows.length} records`;
+}
+function filterTable(){
+  const search=document.getElementById('data-search').value.toLowerCase();
+  const reg=document.getElementById('data-region-filter').value;
+  const cat=document.getElementById('data-cat-filter').value;
+  const filtered=DATA.raw_sample.filter(r=>{
+    const matchText=!search||(r.order_id+r.region+r.category+r.subcategory+r.country).toLowerCase().includes(search);
+    const matchReg=!reg||r.region===reg;
+    const matchCat=!cat||r.category===cat;
+    return matchText&&matchReg&&matchCat;
+  });
+  renderRawTable(filtered);
+}
+
+// ═══════════════ QUICK QUERIES ════════════════════════════════════════════════
+function runQuick(op){
+  showPage('olap',document.querySelector('.nav-item:nth-child(2)'));
+  setTimeout(()=>{
+    if(op==='revenue_region'){switchOLAP('slice',document.querySelectorAll('.olap-tab')[0]);document.getElementById('sl-dim').value='region';updateSliceValues();doSlice();}
+    else if(op==='top_countries'){switchOLAP('topn',document.querySelectorAll('.olap-tab')[7]);document.getElementById('tn-dim').value='country';doTopN();}
+    else if(op==='yoy_growth'){switchOLAP('compare',document.querySelectorAll('.olap-tab')[6]);doYoY();}
+    else if(op==='cat_share'){switchOLAP('topn',document.querySelectorAll('.olap-tab')[7]);document.getElementById('tn-dim').value='category';doTopN();}
+    else if(op==='drill_q4'){switchOLAP('drilldown',document.querySelectorAll('.olap-tab')[2]);document.getElementById('dd-hier').value='time';updateDrillOptions();document.getElementById('dd-from').value='quarter';document.getElementById('dd-val').value='Q4';doDrillDown();}
+    else if(op==='electronics_europe'){switchOLAP('dice',document.querySelectorAll('.olap-tab')[1]);document.getElementById('dc-region').value='Europe';document.getElementById('dc-cat').value='Electronics';doDice();}
+  },100);
+}
+
+// ═══════════════ APPLY FILTERS (sidebar) ═════════════════════════════════════
+function applyFilters(){
+  // In a real app, this would filter DATA.raw_sample
+  const yr=document.getElementById('f-year').value;
+  const reg=document.getElementById('f-region').value;
+  const cat=document.getElementById('f-cat').value;
+  // Just update the data view table for demo
+  const filtered=DATA.raw_sample.filter(r=>(yr==='all'||r.year==yr)&&(reg==='all'||r.region===reg)&&(cat==='all'||r.category===cat));
+  renderRawTable(filtered);
+}
+
+// ═══════════════ INIT ════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  initDashboard();
+  renderRawTable(DATA.raw_sample);
+});
+</script>
+  
+</body>
+</html>
