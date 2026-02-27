@@ -2,9 +2,9 @@
 
 The OLAP AI Assistant successfully processes all dataset-related queries through natural language, as demonstrated here with a pivot table request showing complete regional analysis with automated insights. Whether users ask for aggregations, drill-downs, trend analysis, comparisons, top performers, revenue shares, or custom pivot tables - the system understands and executes the correct OLAP operation every time.
 
-SCR:
-<img width="771" height="805" alt="image" src="https://github.com/user-attachments/assets/7567da10-9570-4916-9def-b53d4f60d089" />
-<img width="715" height="760" alt="image" src="https://github.com/user-attachments/assets/20dbad3a-c057-4c9e-b273-0a82d9c92061" />
+
+PDF:
+[OLAP_AI_ASSISTANT.pdf](https://github.com/user-attachments/files/25615436/OLAP_AI_ASSISTANT.pdf)
 
 
 ## What's in this package
